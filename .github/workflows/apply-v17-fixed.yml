@@ -1,0 +1,42 @@
+name: Aplicar V17 preguntas corregido
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/apply-v17-fixed.yml'
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generar V17 y comprobar datos
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import base64, gzip
+          parts=[Path(f'.github/v17_chunks/{i:02d}.txt').read_text(encoding='utf-8').strip() for i in range(1,10)]
+          payload=''.join(parts)
+          assert len(payload)==32380, len(payload)
+          js=gzip.decompress(base64.b64decode(payload)).decode('utf-8')
+          assert js.count('"id":"AMP')==144, js.count('"id":"AMP')
+          assert '"id":"AMP001"' in js and '"id":"AMP144"' in js
+          Path('extra_questions_v17.js').write_text(js,encoding='utf-8')
+          p=Path('index.html')
+          text=p.read_text(encoding='utf-8')
+          tag='<script src="./extra_questions_v17.js?v=17"></script>'
+          if tag not in text:
+              if '</body>' in text:
+                  text=text.replace('</body>',tag+'\n</body>',1)
+              else:
+                  text += '\n'+tag+'\n'
+              p.write_text(text,encoding='utf-8')
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html extra_questions_v17.js
+          git diff --cached --quiet || git commit -m "Amplía a 25 preguntas por eneatipo"
+          git push
