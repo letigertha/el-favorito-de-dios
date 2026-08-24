@@ -1,0 +1,119 @@
+name: Normalizar nombres de Personaje V18
+
+on:
+  push:
+    paths:
+      - '.github/workflows/normalizar-nombres-personajes-v18.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  normalizar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Usar "el personaje NOMBRE" en preguntas específicas
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, re
+          from pathlib import Path
+
+          CHARS={
+            1:("Perfeccionista","EL PERFECCIONISTA","el"),
+            2:("Encantadora","LA ENCANTADORA","la"),
+            3:("Triunfador","EL TRIUNFADOR","el"),
+            4:("Artista","LA ARTISTA","la"),
+            5:("Investigador","EL INVESTIGADOR","el"),
+            6:("Prevencionista","LA PREVENCIONISTA","la"),
+            7:("Ilusionista","LA ILUSIONISTA","la"),
+            8:("Protector","EL PROTECTOR","el"),
+            9:("Imperturbable","LA IMPERTURBABLE","la"),
+          }
+
+          def neutralize(t):
+            if not isinstance(t,str): return t
+            for _,(noun,display,art) in CHARS.items():
+              if art=='el':
+                forms=[
+                  (rf'\bDel\s+{noun}\b',f'Del personaje {display}'),
+                  (rf'\bdel\s+{noun}\b',f'del personaje {display}'),
+                  (rf'\bAl\s+{noun}\b',f'Al personaje {display}'),
+                  (rf'\bal\s+{noun}\b',f'al personaje {display}'),
+                  (rf'\bEl\s+{noun}\b',f'El personaje {display}'),
+                  (rf'\bel\s+{noun}\b',f'el personaje {display}'),
+                ]
+              else:
+                forms=[
+                  (rf'\bDe\s+la\s+{noun}\b',f'Del personaje {display}'),
+                  (rf'\bde\s+la\s+{noun}\b',f'del personaje {display}'),
+                  (rf'\bA\s+la\s+{noun}\b',f'Al personaje {display}'),
+                  (rf'\ba\s+la\s+{noun}\b',f'al personaje {display}'),
+                  (rf'\bLa\s+{noun}\b',f'El personaje {display}'),
+                  (rf'\bla\s+{noun}\b',f'el personaje {display}'),
+                ]
+              for pat,repl in forms:
+                t=re.sub(pat,repl,t)
+            return t
+
+          def process(q):
+            if q.get('modo')!='personaje': return q
+            q['pregunta']=neutralize(q.get('pregunta',''))
+            if isinstance(q.get('opciones'),dict):
+              q['opciones']={k:neutralize(v) for k,v in q['opciones'].items()}
+            return q
+
+          # index.html DATA
+          p=Path('index.html')
+          html=p.read_text(encoding='utf-8')
+          prefix='const DATA='
+          start=html.index(prefix)+len(prefix)
+          depth=0; ins=False; esc=False; end=None
+          for i,ch in enumerate(html[start:],start=start):
+            if ins:
+              if esc: esc=False
+              elif ch=='\\': esc=True
+              elif ch=='"': ins=False
+            else:
+              if ch=='"': ins=True
+              elif ch=='{': depth+=1
+              elif ch=='}':
+                depth-=1
+                if depth==0:
+                  end=i+1; break
+          data=json.loads(html[start:end])
+          for q in data['questions']: process(q)
+          packed=json.dumps(data,ensure_ascii=False,separators=(',',':'))
+          html=html[:start]+packed+html[end:]
+          html=html.replace('./extra_questions_v17.js?v=18','./extra_questions_v17.js?v=18b')
+          p.write_text(html,encoding='utf-8')
+
+          # extras
+          ep=Path('extra_questions_v17.js')
+          extra=ep.read_text(encoding='utf-8')
+          m=re.match(r'const EXTRA_QUESTIONS_V17=(\[.*\]);\nDATA\.questions\.push',extra,re.S)
+          arr=json.loads(m.group(1))
+          for q in arr: process(q)
+          ep.write_text('const EXTRA_QUESTIONS_V17='+json.dumps(arr,ensure_ascii=False,separators=(',',':'))+';\nDATA.questions.push(...EXTRA_QUESTIONS_V17);\nif(typeof renderHomeCounts===\'function\')renderHomeCounts();\n',encoding='utf-8')
+
+          # Validación básica
+          assert len(data['questions'])==162
+          assert len(arr)==144
+          assert sum(1 for q in data['questions'] if q.get('modo')=='identidad')==81
+          print('OK: concordancia neutralizada mediante el personaje + nombre')
+          PY
+
+      - name: Guardar ajuste V18
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html extra_questions_v17.js
+          if git diff --cached --quiet; then
+            echo "Sin cambios"
+          else
+            git commit -m "V18: normaliza nombres de Personaje en preguntas"
+            git push
+          fi
