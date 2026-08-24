@@ -1,0 +1,214 @@
+name: Convertir preguntas a Personajes V18
+
+on:
+  push:
+    paths:
+      - '.github/workflows/convertir-preguntas-personajes-v18.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  convertir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sustituir eneatipos por nombres de Personaje
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, re
+          from pathlib import Path
+
+          CHARS = {
+              1: {"noun":"Perfeccionista","article":"el","cap":"El","display":"EL PERFECCIONISTA"},
+              2: {"noun":"Encantadora","article":"la","cap":"La","display":"LA ENCANTADORA"},
+              3: {"noun":"Triunfador","article":"el","cap":"El","display":"EL TRIUNFADOR"},
+              4: {"noun":"Artista","article":"la","cap":"La","display":"LA ARTISTA"},
+              5: {"noun":"Investigador","article":"el","cap":"El","display":"EL INVESTIGADOR"},
+              6: {"noun":"Prevencionista","article":"la","cap":"La","display":"LA PREVENCIONISTA"},
+              7: {"noun":"Ilusionista","article":"la","cap":"La","display":"LA ILUSIONISTA"},
+              8: {"noun":"Protector","article":"el","cap":"El","display":"EL PROTECTOR"},
+              9: {"noun":"Imperturbable","article":"la","cap":"La","display":"LA IMPERTURBABLE"},
+          }
+
+          def f(n):
+              c=CHARS[n]
+              noun, art, cap = c['noun'], c['article'], c['cap']
+              inline=f"{art} {noun}"
+              capital=f"{cap} {noun}"
+              de=f"del {noun}" if art=='el' else f"de la {noun}"
+              De=f"Del {noun}" if art=='el' else f"De la {noun}"
+              a=f"al {noun}" if art=='el' else f"a la {noun}"
+              A=f"Al {noun}" if art=='el' else f"A la {noun}"
+              return c['display'], inline, capital, de, De, a, A
+
+          def replace_text(t):
+              if not isinstance(t,str):
+                  return t
+              for n in range(1,10):
+                  display, inline, capital, de, De, a, A = f(n)
+
+                  # Etiquetas de opciones de ¿QUIÉN ES?: "El 7 Transmisor" -> "LA ILUSIONISTA · Transmisor"
+                  t=re.sub(rf'\bEl\s+{n}\s+(Conservación|Social|Transmisor)\b', lambda m:f"{display} · {m.group(1)}", t)
+                  t=re.sub(rf'\bel\s+{n}\s+(conservación|social|transmisor)\b', lambda m:f"{inline} · {m.group(1)}", t)
+
+                  # Preposición + "un/una N" para que la frase siga siendo gramatical.
+                  pairs = [
+                      (rf'\bA\s+(?:un|una)\s+{n}\b', A),
+                      (rf'\ba\s+(?:un|una)\s+{n}\b', a),
+                      (rf'\bDe\s+(?:un|una)\s+{n}\b', De),
+                      (rf'\bde\s+(?:un|una)\s+{n}\b', de),
+                      (rf'\bCon\s+(?:un|una)\s+{n}\b', f"Con {inline}"),
+                      (rf'\bcon\s+(?:un|una)\s+{n}\b', f"con {inline}"),
+                      (rf'\bPara\s+(?:un|una)\s+{n}\b', f"Para {inline}"),
+                      (rf'\bpara\s+(?:un|una)\s+{n}\b', f"para {inline}"),
+                      (rf'\bPor\s+(?:un|una)\s+{n}\b', f"Por {inline}"),
+                      (rf'\bpor\s+(?:un|una)\s+{n}\b', f"por {inline}"),
+                      (rf'\bAnte\s+(?:un|una)\s+{n}\b', f"Ante {inline}"),
+                      (rf'\bante\s+(?:un|una)\s+{n}\b', f"ante {inline}"),
+                  ]
+                  for pat,repl in pairs:
+                      t=re.sub(pat,repl,t)
+
+                  # "del eneatipo 7", etc.
+                  t=re.sub(rf'\bDel\s+eneatipo\s+{n}\b', De, t)
+                  t=re.sub(rf'\bdel\s+eneatipo\s+{n}\b', de, t)
+
+                  # Formas numéricas restantes.
+                  replacements = [
+                      (rf'\bDel\s+{n}\b',De),(rf'\bdel\s+{n}\b',de),
+                      (rf'\bAl\s+{n}\b',A),(rf'\bal\s+{n}\b',a),
+                      (rf'\bUn\s+{n}\b',capital),(rf'\bun\s+{n}\b',inline),
+                      (rf'\bUna\s+{n}\b',capital),(rf'\buna\s+{n}\b',inline),
+                      (rf'\bEl\s+{n}\b',capital),(rf'\bel\s+{n}\b',inline),
+                      (rf'\bLa\s+{n}\b',capital),(rf'\bla\s+{n}\b',inline),
+                      (rf'\bEneatipo\s+{n}\b',display),(rf'\beneatipo\s+{n}\b',inline),
+                  ]
+                  for pat,repl in replacements:
+                      t=re.sub(pat,repl,t)
+
+              t=re.sub(r'\bEneatipos\b','Personajes',t)
+              t=re.sub(r'\beneatipos\b','Personajes',t)
+              t=re.sub(r'\bEneatipo\b','Personaje',t)
+              t=re.sub(r'\beneatipo\b','Personaje',t)
+              return t
+
+          def was_identity(q):
+              s=q.get('pregunta','').strip().lower()
+              return s.startswith('¿qué eneatipo') or s.startswith('qué eneatipo') or s.startswith('¿que eneatipo') or s.startswith('que eneatipo') or q.get('modo')=='identidad'
+
+          def transform_question(q, identity=None):
+              if identity is None:
+                  identity=was_identity(q)
+              q['modo']='identidad' if identity else 'personaje'
+              q['pregunta']=replace_text(q.get('pregunta',''))
+              if isinstance(q.get('opciones'),dict):
+                  q['opciones']={k:replace_text(v) for k,v in q['opciones'].items()}
+              return q
+
+          # ---------- index.html ----------
+          p=Path('index.html')
+          html=p.read_text(encoding='utf-8')
+          prefix='const DATA='
+          start=html.index(prefix)+len(prefix)
+          pos=start
+          depth=0; in_string=False; escaped=False; end=None
+          for i,ch in enumerate(html[start:], start=start):
+              if in_string:
+                  if escaped: escaped=False
+                  elif ch=='\\': escaped=True
+                  elif ch=='"': in_string=False
+              else:
+                  if ch=='"': in_string=True
+                  elif ch=='{': depth+=1
+                  elif ch=='}':
+                      depth-=1
+                      if depth==0:
+                          end=i+1
+                          break
+          if end is None:
+              raise RuntimeError('No se pudo localizar DATA')
+          data=json.loads(html[start:end])
+          original_count=len(data['questions'])
+          identity_count=sum(1 for q in data['questions'] if was_identity(q))
+          for q in data['questions']:
+              transform_question(q)
+          if original_count != 162:
+              raise RuntimeError(f'Se esperaban 162 preguntas base y hay {original_count}')
+          if identity_count != 81:
+              raise RuntimeError(f'Se esperaban 81 preguntas ¿QUIÉN ES? y hay {identity_count}')
+          packed=json.dumps(data,ensure_ascii=False,separators=(',',':'))
+          html=html[:start]+packed+html[end:]
+
+          # Clasificación: ya no depende de la palabra "eneatipo".
+          old="function isIdentity(q){let s=q.pregunta.trim().toLowerCase();return s.startsWith('¿qué eneatipo')||s.startsWith('qué eneatipo')||s.startsWith('¿que eneatipo')||s.startsWith('que eneatipo')}"
+          new="function isIdentity(q){let s=q.pregunta.trim().toLowerCase();return q.modo==='identidad'||s.startsWith('¿qué personaje')||s.startsWith('qué personaje')||s.startsWith('¿que personaje')||s.startsWith('que personaje')}"
+          if old not in html:
+              raise RuntimeError('No se encontró isIdentity original')
+          html=html.replace(old,new,1)
+
+          # Nombre visible del Personaje en la cabecera de cada pregunta específica.
+          anchor="const IDENTITY='identity';"
+          names="const CHARACTER_NAMES={1:'EL PERFECCIONISTA',2:'LA ENCANTADORA',3:'EL TRIUNFADOR',4:'LA ARTISTA',5:'EL INVESTIGADOR',6:'LA PREVENCIONISTA',7:'LA ILUSIONISTA',8:'EL PROTECTOR',9:'LA IMPERTURBABLE'};\nfunction characterName(n){return CHARACTER_NAMES[n]||`PERSONAJE ${n}`}\n"
+          if 'const CHARACTER_NAMES=' not in html:
+              html=html.replace(anchor,names+anchor,1)
+
+          old_draw="function drawQuestion(type){let pool=qPool(type),q=pick(pool,qKey(type));if(!q)return exhausted(type===IDENTITY?'¿QUIÉN ES?':`Eneatipo ${type}`);current={kind:'question',type,q};answerVisible=false;enter();renderQuestion()}"
+          new_draw="function drawQuestion(type){let pool=qPool(type),q=pick(pool,qKey(type));if(!q)return exhausted(type===IDENTITY?'¿QUIÉN ES?':characterName(type));current={kind:'question',type,q};answerVisible=false;enter();renderQuestion()}"
+          if old_draw not in html:
+              raise RuntimeError('No se encontró drawQuestion original')
+          html=html.replace(old_draw,new_draw,1)
+
+          old_chip="chip=type===IDENTITY?'🔎 ¿QUIÉN ES?':`ENEATIPO ${type}`;"
+          new_chip="chip=type===IDENTITY?'🔎 ¿QUIÉN ES?':characterName(type);"
+          if old_chip not in html:
+              raise RuntimeError('No se encontró chip de pregunta')
+          html=html.replace(old_chip,new_chip,1)
+
+          html=html.replace('./extra_questions_v17.js?v=17','./extra_questions_v17.js?v=18')
+          p.write_text(html,encoding='utf-8')
+
+          # ---------- 144 preguntas añadidas ----------
+          ep=Path('extra_questions_v17.js')
+          extra=ep.read_text(encoding='utf-8')
+          m=re.match(r'const EXTRA_QUESTIONS_V17=(\[.*\]);\nDATA\.questions\.push',extra,re.S)
+          if not m:
+              raise RuntimeError('No se pudo leer EXTRA_QUESTIONS_V17')
+          arr=json.loads(m.group(1))
+          if len(arr)!=144:
+              raise RuntimeError(f'Se esperaban 144 preguntas extra y hay {len(arr)}')
+          for q in arr:
+              transform_question(q,False)
+          packed_extra=json.dumps(arr,ensure_ascii=False,separators=(',',':'))
+          extra='const EXTRA_QUESTIONS_V17='+packed_extra+';\nDATA.questions.push(...EXTRA_QUESTIONS_V17);\nif(typeof renderHomeCounts===\'function\')renderHomeCounts();\n'
+          ep.write_text(extra,encoding='utf-8')
+
+          # ---------- validación ----------
+          visible=[]
+          for q in data['questions']+arr:
+              visible.append(q['pregunta'])
+              visible.extend(q.get('opciones',{}).values())
+          remaining_eneatipo=[x for x in visible if re.search(r'\beneatipos?\b',x,re.I)]
+          remaining_labels=[x for x in visible if re.search(r'\b(?:El|el|Un|un|Una|una)\s+[1-9]\b',x)]
+          if remaining_eneatipo:
+              raise RuntimeError('Quedan menciones visibles a eneatipo/eneatipos')
+          if remaining_labels:
+              raise RuntimeError('Quedan referencias tipo "un 7" o "el 4"')
+          print('OK: 306 preguntas convertidas a nombres de Personaje')
+          print('OK: 81 ¿QUIÉN ES? + 225 específicas')
+          PY
+
+      - name: Guardar V18
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html extra_questions_v17.js
+          if git diff --cached --quiet; then
+            echo "Sin cambios"
+          else
+            git commit -m "V18: usa nombres de Personaje en las preguntas"
+            git push
+          fi
