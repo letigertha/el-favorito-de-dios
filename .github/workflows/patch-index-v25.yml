@@ -1,0 +1,40 @@
+name: Patch index for V25
+
+on:
+  push:
+    paths:
+      - '.github/workflows/patch-index-v25.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update digital board cache key
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          old = './digital_board_v19.js?v=19'
+          new = './digital_board_v19.js?v=25'
+          if old not in s:
+              print('Old asset reference not found; nothing to do.')
+          else:
+              p.write_text(s.replace(old, new), encoding='utf-8')
+              print('Updated asset reference to V25.')
+          PY
+      - name: Commit patch
+        run: |
+          if git diff --quiet -- index.html; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Fix V25 asset cache key"
+          git push
