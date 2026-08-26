@@ -126,33 +126,10 @@ body.battle-mode #resetTop{display:none}
 .footer-note{margin-top:18px;text-align:center;color:#666a79;font-size:.7rem}.question-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:11px}.type-chip{display:inline-flex;align-items:center;gap:7px;border:1px solid rgba(35,231,255,.38);border-radius:999px;padding:7px 11px;color:var(--cyan);background:rgba(35,231,255,.06);font-weight:900;letter-spacing:.065em;font-size:.76rem}.chip-red{color:#ff899c;border-color:rgba(255,64,95,.55);background:rgba(255,64,95,.07)}.chip-yellow{color:#ffe77c;border-color:rgba(255,216,61,.55);background:rgba(255,216,61,.07)}.chip-blue{color:#89bdff;border-color:rgba(47,140,255,.65);background:rgba(47,140,255,.08)}.remaining{color:var(--muted);font-size:.76rem;font-weight:700;text-align:right}.card{position:relative;overflow:hidden;border-radius:var(--radius);border:1px solid rgba(255,255,255,.14);background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.015));padding:19px;box-shadow:0 20px 70px rgba(0,0,0,.32)}.card:before{content:"";position:absolute;inset:0 0 auto 0;height:2px;background:linear-gradient(90deg,var(--cyan),var(--magenta),var(--violet),var(--yellow));opacity:.9}.card.red:before{background:var(--red)}.card.yellow:before{background:var(--yellow)}.card.blue:before{background:var(--blue)}.question{margin:0 0 18px;font-size:clamp(1.08rem,4.45vw,1.48rem);line-height:1.28;font-weight:900;letter-spacing:-.012em}.action-title{margin:0 0 13px;font-size:clamp(1.25rem,5vw,1.68rem);line-height:1.12;font-weight:950;text-transform:uppercase}.flavor{margin:0 0 18px;color:#c9d2dc;font-size:.96rem;line-height:1.47;font-style:italic}.effect{margin:0;padding:15px;border-radius:15px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.035);font-weight:900;line-height:1.4;font-size:1rem}.subtype{display:inline-block;margin-bottom:10px;color:#9dbbff;font-size:.68rem;font-weight:950;letter-spacing:.12em;text-transform:uppercase}.options{display:grid;gap:10px}.option{display:grid;grid-template-columns:40px 1fr;align-items:start;gap:9px;padding:13px;border:1px solid rgba(255,255,255,.12);border-radius:15px;background:rgba(255,255,255,.025);line-height:1.39;font-size:clamp(.96rem,4vw,1.08rem)}.letter{width:36px;height:36px;display:grid;place-items:center;border-radius:10px;border:1px solid rgba(140,82,255,.55);color:#d9ceff;font-weight:950;background:rgba(140,82,255,.09)}.option.correct{border-color:rgba(109,255,186,.75);background:rgba(109,255,186,.08)}.option.correct .letter{color:#08150f;background:var(--green);border-color:var(--green)}.answer-box{display:none;margin-top:13px;padding:14px 15px;border-radius:15px;background:rgba(255,216,61,.07);border:1px solid rgba(255,216,61,.45);color:#fff1a6;font-weight:900}.answer-box.show{display:block}.result-grid{display:grid;gap:9px;margin-top:14px}.result{padding:13px 14px;border-radius:14px;line-height:1.38;font-size:.95rem}.success{border:1px solid rgba(109,255,186,.38);background:rgba(109,255,186,.07)}.failure{border:1px solid rgba(255,85,118,.4);background:rgba(255,85,118,.07)}.choose-text{margin:0;text-align:center;padding:30px 7px;font-size:clamp(1.35rem,6vw,2rem);font-weight:950;line-height:1.25;text-transform:uppercase}.actions{display:grid;gap:10px;margin-top:14px}.btn{width:100%;min-height:53px;border-radius:15px;border:1px solid transparent;padding:12px 15px;font-weight:950;letter-spacing:.03em;cursor:pointer}.btn-primary{color:#020406;background:linear-gradient(90deg,var(--cyan),#7ff4ff)}.btn-secondary{color:#fff;background:linear-gradient(90deg,rgba(255,43,214,.14),rgba(140,82,255,.14));border-color:rgba(255,43,214,.48)}.btn-ghost{color:#c8cad4;background:transparent;border-color:rgba(255,255,255,.13)}.btn-red{color:#fff;background:rgba(255,64,95,.14);border-color:rgba(255,64,95,.55)}.btn-yellow{color:#fff6c6;background:rgba(255,216,61,.10);border-color:rgba(255,216,61,.55)}.btn-blue{color:#d9eaff;background:rgba(47,140,255,.13);border-color:rgba(47,140,255,.60)}.exhausted{margin:auto 0;text-align:center;border:1px solid rgba(255,216,61,.36);border-radius:22px;padding:27px 19px;background:rgba(255,216,61,.04)}.exhausted .big{font-size:2.4rem;margin-bottom:8px}.exhausted h2{margin:0 0 9px}.exhausted p{color:#c3c5cf;line-height:1.48}.modal{position:fixed;inset:0;display:none;place-items:center;padding:20px;background:rgba(0,0,0,.74);backdrop-filter:blur(7px);z-index:20}.modal.show{display:grid}.modal-box{width:min(100%,420px);padding:21px;border-radius:22px;background:#0c0c14;border:1px solid rgba(255,43,214,.42);box-shadow:0 24px 90px rgba(0,0,0,.58)}.modal-box h2{margin:0 0 8px}.modal-box p{margin:0 0 17px;color:#b7bac6;line-height:1.45}.modal-actions{display:grid;gap:9px}@media(min-width:560px){.app{padding-left:24px;padding-right:24px}.type-grid{gap:14px}.card{padding:25px}.actions{grid-template-columns:1fr 1fr}.btn-ghost{grid-column:1/-1}}
 </style>
 </head>
-<body class="intro-mode">
+<body>
 <div class="app">
 <header class="topbar"><div><p class="eyebrow">TABLERO // CENTRAL DE JUEGO</p><h1>EL FAVORITO DE DIOS</h1></div><button class="icon-btn" id="resetTop" aria-label="Nueva partida" title="Nueva partida">↻</button></header>
-<main id="introScreen" class="screen active intro-screen">
-<p class="intro-kicker">MISIÓN // AGENTE 008</p>
-<h1 class="intro-title">EL FAVORITO<br>DE DIOS</h1>
-<section class="intro-copy">
-<p class="agent">Agente 008:</p>
-<p>Hace un año arreglaste, sin mucha dificultad, <strong>el problema del tiempo</strong>.<br>Después, con similar destreza, solucionaste <strong>el del espacio</strong>.</p>
-<p>Y como has sobrevivido a ambos con esa irritante costumbre tuya de resolver las cosas, creo que ha llegado el momento de enfrentarnos al verdadero enigma:</p>
-<p><strong>tú.</strong></p>
-<p>Llevas mucho tiempo sosteniendo una teoría con una seguridad bastante cuestionable:</p>
-<p><strong>que eres el favorito de Dios.</strong></p>
-<p>Bien.</p>
-<p>Ha llegado el momento de comprobarla.</p>
-<p>Porque ser el favorito de Dios siendo Juma tiene poco mérito. Ya conoces el personaje, sabes cómo funciona y llevas toda la vida jugando con ventaja.</p>
-<p><strong>Esta vez no.</strong></p>
-<p>Ahora es posible que te toque cambiar de identidad. Tendrás otras virtudes, otros defectos, otros instintos y probablemente tomarás decisiones que tu yo habitual consideraría profundamente sospechosas.</p>
-<p>Tendrás que sobrevivir a situaciones absurdas, entender a los demás, conseguir lo que necesitas y, sobre todo, <strong>demostrar que sigues teniendo suerte incluso cuando dejas de ser tú.</strong></p>
-<p>Porque esa es la pregunta:</p>
-<p class="big-question">¿Eres realmente el favorito de Dios?</p>
-<p>Vamos a comprobarlo.</p>
-<p class="welcome">Bienvenido a “TU” juego.<br><span style="font-weight:700;color:#b9bbc7">(Bueno, eso también tendrás que demostrarlo.)</span></p>
-<p class="birthday"><strong>Feliz cumpleaños.</strong><br><span class="rebirth">Dicen que a los 33 se renace. Yo, por si acaso, te he preparado un problema a tu altura. 😈</span></p>
-</section>
-<button class="btn btn-primary intro-start" id="startGame">▶ EMPEZAR</button>
-</main>
+<button id="startGame" hidden aria-hidden="true" tabindex="-1"></button>
 <main id="home" class="screen">
 <p class="intro">Usa el bloque que indique la casilla del tablero. El sistema mezcla cada mazo y evita repeticiones durante la partida.</p>
 <div class="section-label guide-label">ANTES DE JUGAR</div>
@@ -665,6 +642,5 @@ saveModal.onclick=e=>{if(e.target===saveModal)closeSaveCard()};
 saveOwner.addEventListener('keydown',e=>{if(e.key==='Enter')confirmSaveCard()});document.getElementById('guideBtn').onclick=showMainGuide;document.getElementById('battleBtn').onclick=showBattleHome;document.getElementById('identityBtn').onclick=()=>drawQuestion(IDENTITY);document.getElementById('chooseBtn').onclick=drawChoose;document.getElementById('thingsBtn').onclick=drawThings;document.getElementById('instinctBtn').onclick=drawInstinct;document.getElementById('resetTop').onclick=openReset;document.getElementById('confirmReset').onclick=resetAll;document.getElementById('cancelReset').onclick=closeReset;resetModal.onclick=e=>{if(e.target===resetModal)closeReset()};renderHomeCounts();
 </script>
 <script src="./extra_questions_v17.js?v=18b"></script>
-<script src="./digital_board_v19.js?v=26"></script>
-<script src="./digital_board_v19.js?v=19"></script>
+<script src="./digital_board_v19.js?v=27"></script>
 </body></html>
