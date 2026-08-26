@@ -1,0 +1,40 @@
+name: Public entry V27
+on:
+  push:
+    paths:
+      - '.github/workflows/public-entry-v27.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Remove birthday intro and normalize V27 loader
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('<body class="intro-mode">','<body>')
+          s,n=re.subn(r'<main id="introScreen" class="screen active intro-screen">.*?</main>\s*<main id="home"', '<button id="startGame" hidden aria-hidden="true" tabindex="-1"></button>\n<main id="home"', s, count=1, flags=re.S)
+          if n!=1:
+              raise SystemExit('No se encontró la intro de cumpleaños para sustituir')
+          s=re.sub(r'\n<script src="\./digital_board_v19\.js\?v=\d+[a-z]?\"></script>\s*\n<script src="\./digital_board_v19\.js\?v=\d+[a-z]?\"></script>', '\n<script src="./digital_board_v19.js?v=27"></script>', s, count=1)
+          s=re.sub(r'<script src="\./digital_board_v19\.js\?v=\d+[a-z]?\"></script>', '<script src="./digital_board_v19.js?v=27"></script>', s)
+          # Si hubiera quedado duplicado por versiones históricas, deja una sola carga.
+          marker='<script src="./digital_board_v19.js?v=27"></script>'
+          first=s.find(marker)
+          if first!=-1:
+              rest=s[first+len(marker):].replace('\n'+marker,'').replace(marker,'')
+              s=s[:first+len(marker)]+rest
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit public entry
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "V27: elimina intro privada de cumpleaños" || exit 0
+          git push
