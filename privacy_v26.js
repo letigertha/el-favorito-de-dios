@@ -18,15 +18,25 @@ function sanitize(){
   busy=true;
   try{
     board.classList.add(MARK);
-    board.querySelectorAll('.v24token').forEach(x=>x.remove());
+    // Elimina solo las fichas generadas por el tablero. La ficha privada que
+    // añadimos aquí se conserva para que el MutationObserver pueda estabilizarse.
+    board.querySelectorAll('.v24token:not(.efd-own-token)').forEach(x=>x.remove());
     const name=activeName();
     const here=board.querySelector('.v24node.current');
+    const ownTokens=[...board.querySelectorAll('.v24token.efd-own-token')];
+    let token=ownTokens.shift()||null;
+    ownTokens.forEach(x=>x.remove());
     if(name&&here){
-      const t=document.createElement('span');
-      t.className='v24token efd-own-token';
-      t.textContent=initials(name);
-      t.setAttribute('aria-label',`Ficha de ${name}`);
-      here.appendChild(t);
+      const label=initials(name);
+      if(!token){
+        token=document.createElement('span');
+        token.className='v24token efd-own-token';
+      }
+      if(token.parentElement!==here)here.appendChild(token);
+      if(token.textContent!==label)token.textContent=label;
+      if(token.getAttribute('aria-label')!==`Ficha de ${name}`)token.setAttribute('aria-label',`Ficha de ${name}`);
+    }else if(token){
+      token.remove();
     }
     // Nunca dejamos metadatos visuales de posiciones rivales.
     board.querySelectorAll('[data-opponent],[data-player-position],[data-other-player]').forEach(x=>x.removeAttribute('data-opponent'));
