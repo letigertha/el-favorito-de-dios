@@ -17,7 +17,7 @@ function sanitize(){
   if(!board)return;
   busy=true;
   try{
-    board.classList.add(MARK);
+    if(!board.classList.contains(MARK))board.classList.add(MARK);
     // Elimina solo las fichas generadas por el tablero. La ficha privada que
     // añadimos aquí se conserva para que el MutationObserver pueda estabilizarse.
     board.querySelectorAll('.v24token:not(.efd-own-token)').forEach(x=>x.remove());
