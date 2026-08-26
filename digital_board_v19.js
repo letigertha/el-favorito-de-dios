@@ -1,6 +1,7 @@
 (()=>{'use strict';
 const KEY='efd_digital_game_v22',VER=22;
 const N={1:'EL PERFECCIONISTA',2:'LA ENCANTADORA',3:'EL TRIUNFADOR',4:'LA ARTISTA',5:'EL INVESTIGADOR',6:'LA PREVENCIONISTA',7:'LA ILUSIONISTA',8:'EL PROTECTOR',9:'LA IMPERTURBABLE'};
+const NATURAL_N={1:'El Perfeccionista',2:'La Encantadora',3:'El Triunfador',4:'La Artista',5:'El Investigador',6:'La Prevencionista',7:'La Ilusionista',8:'El Protector',9:'La Imperturbable'};
 const V={1:'Disciplina',2:'Empatía',3:'Adaptabilidad',4:'Sensibilidad',5:'Conocimiento',6:'Previsión',7:'Ingenio',8:'Fuerza',9:'Armonía'};
 const D={1:'Ira',2:'Orgullo',3:'Vanidad',4:'Envidia',5:'Avaricia',6:'Cobardía',7:'Gula',8:'Lujuria',9:'Pereza'};
 const W={1:[9,2],2:[1,3],3:[2,4],4:[3,5],5:[4,6],6:[5,7],7:[6,8],8:[7,9],9:[8,1]},A={1:[4,7],2:[4,8],3:[6,9],4:[1,2],5:[7,8],6:[3,9],7:[1,5],8:[2,5],9:[3,6]};
@@ -13,6 +14,23 @@ const CH=[
 ['RIESGO CALCULADO','50% de ganar una Virtud que te falte; si sale mal recibes su Defecto.','Elimina un Defecto.'],
 ['DOBLE O NADA','Tu próxima pregunta vale doble: acierto = 2 Virtudes; fallo = 2 Defectos.','Elimina un Defecto ahora.'],
 ['CAMBIO DE RUMBO','Da ahora una casilla extra siguiendo la dirección elegida.','Guarda 1 IMPULSO para más adelante.']];
+function naturalizeQuestions(){
+  if(!window.DATA||!Array.isArray(DATA.questions))return;
+  const pairs=Object.keys(N).map(n=>[N[n],NATURAL_N[n]]);
+  DATA.questions.forEach(q=>{
+    if(!q||q.modo==='identidad'||typeof q.pregunta!=='string')return;
+    let s=q.pregunta;
+    pairs.forEach(([raw,nice])=>{
+      s=s.replaceAll(`al personaje ${raw}`,`a ${nice}`)
+         .replaceAll(`del personaje ${raw}`,`de ${nice}`)
+         .replaceAll(`el personaje ${raw}`,nice)
+         .replaceAll(`personaje ${raw}`,nice)
+         .replaceAll(raw,nice);
+    });
+    q.pregunta=s;
+  });
+}
+naturalizeQuestions();
 if(window.DATA&&Array.isArray(DATA.elige_tu))DATA.elige_tu=CH.map((x,i)=>({id:`V22-${i}`,texto:`${x[0]}\n\nA · ${x[1]}\nB · ${x[2]}`}));
 let mode,setup,game,ov,dig=null;
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
